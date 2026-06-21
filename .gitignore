@@ -220,3 +220,6 @@ __marimo__/
 
 # enviorment variables
 .env
+
+#cache flag
+__pycache__/
