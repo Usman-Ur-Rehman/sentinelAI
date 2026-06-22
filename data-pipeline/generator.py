@@ -70,18 +70,18 @@ def exfiltration_event(src_ip):
 
 attack_ip=fake.ipv4()
 
-    while (True):
-        roll=random.random()
+while (True):
+    roll=random.random()
 
-        if(roll<0.85):
-            event=normal_event()
-        elif(roll<0.92):
-            event=brute_force_event(attack_ip)
-        elif(roll<0.92):
-            event=port_scan_event(attack_ip,random.randint(1, 1024))
-        else:
-            event=exfiltration_event(attack_ip)
-        
-        r.xadd('threat_stream',{'data':json.dumps(event)})
+    if(roll<0.85):
+        event=normal_event()
+    elif(roll<0.92):
+        event=brute_force_event(attack_ip)
+    elif(roll<0.92):
+        event=port_scan_event(attack_ip,random.randint(1, 1024))
+    else:
+        event=exfiltration_event(attack_ip)
+    
+    r.xadd('threat_stream',{'data':json.dumps(event)})
 
-        
+    
