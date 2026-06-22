@@ -23,8 +23,8 @@ services:
       POSTGRES_DB: vectordb
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password123
-    
-    api:
+
+  api:
     build: ./backend
     ports:
       - '8000:8000'
@@ -34,7 +34,7 @@ services:
       - postgres
 
   frontend:
-    image: node:18-alpine
+    image: node:20-alpine
     working_dir: /app
     volumes:
       - ./frontend:/app
