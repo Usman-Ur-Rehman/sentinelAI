@@ -1,8 +1,17 @@
 from fastapi import FastAPI
 from clickhouse_driver import Client
+from fastapi.middleware.cors import CORSMiddleware
 
 #creating instance of fastAPI as app
 app=FastAPI(title='sentinelAI')
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #creating
 click_house=Client('clickhouse',user='admin',password='password123',database='threat_db')
