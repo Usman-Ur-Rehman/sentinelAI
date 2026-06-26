@@ -234,8 +234,6 @@ ml/cicids/
 
 
 #for .picklefiles
-ml/*.npy
-ml/*.csv
-ml/*.pkl
-ml/*.pth
-ml/cicids/
+ml/y_multiclass.csv
+ml/y_binary.npy
+ml/X_scaled.npy
