@@ -35,3 +35,16 @@ def loadModels():
 
 
     return iso_forest,iso_explainer,ae_model,ae_threshold,classifier,label_encoder,scaler
+
+
+def scoreEvent():
+    
+    iso_forest, iso_explainer, ae_model, ae_threshold, clf, le, scaler = models
+    
+    
+    features_scaled = scaler.transform([event_features])
+
+   
+    iso_score = -iso_forest.score_samples(features_scaled)[0]
+
+    iso_is_attack = iso_forest.predict(features_scaled)[0] == -1
