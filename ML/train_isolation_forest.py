@@ -26,3 +26,16 @@ y_pred = (y_pred_raw == -1).astype(int)
 f1 = f1_score(y_test, y_pred)
 print(classification_report(y_test, y_pred, target_names=['Normal','Attack']))
 print(f'F1 Score: {f1:.4f}')
+
+# SHAP — TreeExplainer for Isolation Forest
+print('Running SHAP...')
+explainer = shap.TreeExplainer(iso_forest)
+X_sample = X_test[:200]
+shap_values = explainer.shap_values(X_sample)
+shap.summary_plot(shap_values, X_sample,
+                  feature_names=CICIDS_FEATURES, show=False)
+plt.savefig('shap_isolation_forest.png', bbox_inches='tight')
+
+joblib.dump(iso_forest, 'isolation_forest.pkl')
+joblib.dump(explainer, 'iso_shap_explainer.pkl')
+print('Done. Models and SHAP plot saved.')
