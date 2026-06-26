@@ -231,3 +231,11 @@ ml/cicids/
 *.pkl
 *.pth
 *.npy
+
+
+#for .picklefiles
+ml/*.npy
+ml/*.csv
+ml/*.pkl
+ml/*.pth
+ml/cicids/
