@@ -7,11 +7,11 @@ from sklearn.metrics import roc_curve, classification_report
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend safe for terminal execution
 import matplotlib.pyplot as plt
-from models import AutoEncoder
+from models import Autoencoder
 
 print("🧠 Loading preprocessed training matrices...")
-X_scaled=np.load("x_scaled.npy")
-Y_binary=np.load("y_binary.npy")
+X_scaled=np.load("X_scaled.npy")
+Y_binary=np.load("Y_binary.npy")
 
 #extracting only the normal packets and converting to 32 bit floating point tensor
 X_normal=X_scaled[Y_binary==0]
@@ -22,7 +22,7 @@ loader=DataLoader(TensorDataset(X_normal_tensor),batch_size=256,shuffle=True)
 input_dim=X_scaled.shape[1]
 
 #making model and selecting optimizer and updation criteria
-model=AutoEncoder(input_dim)
+model=Autoencoder(input_dim)
 optimizer=torch.optim.Adam(model.parameters(),lr=0.001)
 criterion=nn.MSELoss()
 
@@ -60,7 +60,7 @@ plt.xlabel('Reconstruction Error (MSE)')
 plt.ylabel('Count')
 plt.title('Autoencoder Reconstruction Error — Normal vs Attack')
 plt.legend()
-plt.savefig('ml/autoencoder_error_distribution.png', bbox_inches='tight')
+plt.savefig('autoencoder_error_distribution.png', bbox_inches='tight')
 plt.close()
 
 # Calculate optimal decision boundary threshold using Youden's J-statistic
@@ -76,7 +76,7 @@ print(classification_report(Y_binary, y_pred_ae, target_names=['Normal', 'Attack
 
 # Serialize final state configurations for runtime hot-swaps
 print("📦 Exporting PyTorch state dictionary weights and threshold profiles...")
-torch.save(model.state_dict(), 'ml/autoencoder.pth')
-joblib.dump({'threshold': optimal_threshold, 'input_dim': input_dim}, 'ml/autoencoder_config.pkl')
-np.save('ml/reconstruction_errors.npy', errors)
+torch.save(model.state_dict(), 'autoencoder.pth')
+joblib.dump({'threshold': optimal_threshold, 'input_dim': input_dim}, 'autoencoder_config.pkl')
+np.save('reconstruction_errors.npy', errors)
 print("🏁 Done. Autoencoder fully trained and serialized.")

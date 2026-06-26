@@ -12,9 +12,9 @@ from feature_mapping import CICIDS_FEATURES
 print("🧬 Initializing SHAP DeepExplainer evaluation...")
 
 # Load structural metadata configurations and model weights
-config = joblib.load('ml/autoencoder_config.pkl')
+config = joblib.load('autoencoder_config.pkl')
 model = Autoencoder(config['input_dim'])
-model.load_state_dict(torch.load('ml/autoencoder.pth'))
+model.load_state_dict(torch.load('autoencoder.pth'))
 model.eval()
 
 X_scaled = np.load('ml/X_scaled.npy')
