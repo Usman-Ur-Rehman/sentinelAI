@@ -14,7 +14,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 iso_forest = IsolationForest(
-    n_estimators=200, contamination=0.1,
+    n_estimators=200, contamination=0.2,
     random_state=42, n_jobs=-1
 )
 
