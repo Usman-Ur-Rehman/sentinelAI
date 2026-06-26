@@ -37,14 +37,62 @@ def loadModels():
     return iso_forest,iso_explainer,ae_model,ae_threshold,classifier,label_encoder,scaler
 
 
-def scoreEvent():
-    
-    iso_forest, iso_explainer, ae_model, ae_threshold, clf, le, scaler = models
-    
-    
-    features_scaled = scaler.transform([event_features])
+def scoreEvent(event_features:list,models:tuple) -> dict:
 
-   
-    iso_score = -iso_forest.score_samples(features_scaled)[0]
+    #extracting all models from models tuple(models returned by loadModels())
 
-    iso_is_attack = iso_forest.predict(features_scaled)[0] == -1
+    iso_forest,iso_explainer,ae_model,ae_threshold,classifier,label_encoder,scaler=models
+
+    #now a feature comes and we have to find confidence score for it but before finding the score we scale all 12 features of  
+    #that event using the same scaler we used earlier during preprocessing of data
+
+    features_scaled=scaler.transform([event_features])
+
+    #----------------------Passing Event From IF And Detecting Score-----------------#
+
+    #passing those scaled features through isolation forestmodel so it gives us thier score
+    #negated so higher the score means anomly without -ve lower the score shows more anaomly so 
+    # we negated for our easiness
+    isolation_forest_score=-iso_forest.score_samples(features_scaled)[0]
+
+    # Isolation Forest classification Rule :(attack=-1 & normal =1)
+
+    IF_is_attack=iso_forest.predict(features_scaled)[0]==-1
+    #it will assign it true value if prediction by model =-1 (-1 means acc to IF it is anomly)
+
+
+    #----------------------Passing Event From AE And Detecting Score-----------------#
+
+    with torch.no_grad():
+        #pytorch works with it's own only tensor dtype so converting features different dtypes to only identical tensor type
+        features_scaled_tensor_dtype=torch.FloatTensor(features_scaled)
+
+        #passing features to AE model to score them it will give reconstructed event
+        reconstructed_event=ae_model(features_scaled_tensor_dtype)
+
+        #finding reconstrcution error (by comparing orugnal features_scaled_tensor_dtypes event with reconstructed_event by subtracting them)
+        reconstructed_error=torch.mean(
+            (features_scaled_tensor_dtype-reconstructed_event)**2 
+        ).item()
+
+        AE_is_attack=reconstructed_error>ae_threshold
+
+
+
+    #----------------------Ensembling Both Scores-----------------#
+
+
+    # normalizing both scores produced by IF & AE
+    IF_score_normalized=min(isolation_forest_score/0.5,1.0)
+    AE_score_normalized=min(reconstructed_error/ae_threshold,1.0)    
+
+    # finding avg of both scores produced by each model
+    confidence_score = (IF_score_normalized + AE_score_normalized) / 2.0
+
+
+    #----------------------SHAP Reasoning-----------------#
+    # now shap checkls which feature contributed at how much extent in making it anomoly
+    #so first finding each featues importance
+
+    shap_features_importance_values=iso_explainer.shap_values(features_scaled)[0]
+    
