@@ -223,3 +223,17 @@ __marimo__/
 
 #cache flag
 __pycache__/
+
+# for excel 
+ML/cicids/
+ml/cicids/
+*.csv
+*.pkl
+*.pth
+*.npy
+
+
+#for .picklefiles
+ml/y_multiclass.csv
+ml/y_binary.npy
+ml/X_scaled.npy
