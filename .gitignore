@@ -228,9 +228,9 @@ __pycache__/
 ML/cicids/
 ml/cicids/
 *.csv
-*.pkl
-*.pth
-*.npy
+#*.pkl
+#*.pth
+#*.npy
 
 
 #for .picklefiles
