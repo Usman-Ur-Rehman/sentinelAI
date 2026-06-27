@@ -23,3 +23,16 @@ np.save('ML/y_binary.npy', y_binary.values)
 pd.Series(y_multiclass.values).to_csv('ML/y_multiclass.csv', index=False)
 
 print('Data prep complete. Shape:', X_scaled.shape)
+
+
+
+from feature_mapping import CICIDS_FEATURES
+
+feature_baseline = {
+    'mean': {f: float(X[f].mean()) for f in CICIDS_FEATURES},
+    'std':  {f: float(X[f].std())  for f in CICIDS_FEATURES}
+}
+ 
+joblib.dump(feature_baseline, 'ML/feature_baseline.pkl')
+print('Feature baseline saved to ML/feature_baseline.pkl')
+ 
