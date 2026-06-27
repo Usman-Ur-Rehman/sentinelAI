@@ -141,5 +141,28 @@ class AutoRetrainer:
             n_jobs=-1           
         )
         new_model.fit(X_new)  
-               
+
+        #now swapping with help of lock
+        with self.swap_lock:
+            self.live_model=new_model
+            #above line swaps model so new model comes in
+            #so reset everything
+            joblib.dump(new_model,self.model_path)
+            self.driftDetector.drift_detected=False
+            self.driftDetector.drift_reason=None
+            self.driftDetector.drifted_features = []             
+            self.driftDetector.avg_confidence_score = 1.0       
+            self.driftDetector.confidence_scores.clear() 
+            for f in self.driftDetector.feature_windows:        
+                self.driftDetector.feature_windows[f].clear()  
+            print('[AutoRetrainer] Hot-swap complete-All drift state reset')
+    
+    def monitor_loop(self, X_data):
+        # runs in background thread checks drift in every 60 seconds
+        while True:
+            time.sleep(60)
+            if self.driftDetector.drift_detected: 
+                self.retrain_and_swap(X_data)
+
+
                               
