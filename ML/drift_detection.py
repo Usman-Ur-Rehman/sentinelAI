@@ -7,6 +7,7 @@ from sklearn.metrics import f1_score
 from sklearn.ensemble import IsolationForest
 from feature_mapping import CICIDS_FEATURES
 
+
 class driftDetector:
 
     def __init__(self,window_size=500,confidence_threshold=0.60,std_multiplier=2.0):
@@ -117,7 +118,28 @@ class driftDetector:
             
 
 
-       
-              
+
+class AutoRetrainer:
+    def __init__(self,driftDetector,model_path='ML/isolation_forest.pkl'):
+        self.drift_detector = driftDetector  
+        self.model_path = model_path
+        self.live_model = None            
+        self.swap_lock = threading.Lock()  
+
+    def get_live_model(self):
+        with self.swap_lock:
+            return self.live_model
+    
+
+    def retrain_and_swap(self, X_new):
+        print(f'[AutoRetrainer] Retraining — reason: {self.driftDetector.drift_reason}')
+
+        new_model = IsolationForest(
+            n_estimators=200,  
+            contamination=0.2, 
+            random_state=42,   
+            n_jobs=-1           
+        )
+        new_model.fit(X_new)  
                
                               
