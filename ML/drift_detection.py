@@ -45,66 +45,66 @@ class driftDetector:
     def addResult(self,confidence: float,raw_features: dict):
         #so event came and adding recording it's results(confidence_score generate by ensemble.py and dict of features:value of that particular event)
         #add the confidence score to rolling window(queue of confidence scores)
-            self.confidence_scores.append(confidence)
+        self.confidence_scores.append(confidence)
 
-            #now extract all feature values from incoming event and push them into list of the corresponding feature's list to maintain previous 500 record values for each feature
-            for f in CICIDS_FEATURES:
-                value=raw_features.get(f,0.0)
-                self.feature_windows[f].append(value)
+        #now extract all feature values from incoming event and push them into list of the corresponding feature's list to maintain previous 500 record values for each feature
+        for f in CICIDS_FEATURES:
+            value=raw_features.get(f,0.0)
+            self.feature_windows[f].append(value)
 
-            if len(self.confidence_scores)<50:# means if we have record for atleast 50 evetns then start checking for drifting otherwise not skip it because the model is not tested that much
-                return
+        if len(self.confidence_scores)<50:# means if we have record for atleast 50 evetns then start checking for drifting otherwise not skip it because the model is not tested that much
+            return
             
 
-            #now if we have have data of more then 50 then start monitoring
+        #now if we have have data of more then 50 then start monitoring
 
-            #-----------------------Confidence Monitoring---------------------------------#
-            self.avg_confidence_score=float(np.mean(self.confidence_scores))
-            confidence_drift=self.avg_confidence_score<self.confidence_threshold #if less means drifted makes it True
+        #-----------------------Confidence Monitoring---------------------------------#
+        self.avg_confidence_score=float(np.mean(self.confidence_scores))
+        confidence_drift=self.avg_confidence_score<self.confidence_threshold #if less means drifted makes it True
 
-            #------------------------Feature's Monitoring---------------------------------#
+        #------------------------Feature's Monitoring---------------------------------#
 
-            self.drifted_features = []  # rest
-            for f in CICIDS_FEATURES:
-                if len(self.feature_windows[f]) < 50:
-                    continue
+        self.drifted_features = []  # rest
+        for f in CICIDS_FEATURES:
+            if len(self.feature_windows[f]) < 50:
+                continue
 
-                rolling_mean = float(np.mean(self.feature_windows[f]))
-                baseline_mean = self.baseline_avg_mean[f]
-                baseline_std  = self.baseline_avg_std[f]
+            rolling_mean = float(np.mean(self.feature_windows[f]))
+            baseline_mean = self.baseline_avg_mean[f]
+            baseline_std  = self.baseline_avg_std[f]
 
-                if baseline_std == 0:
-                    continue
+            if baseline_std == 0:
+                continue
 
-                deviation = abs(rolling_mean - baseline_mean) / baseline_std
-                if deviation > self.std_multiplier:
-                    self.drifted_features.append(f)
+            deviation = abs(rolling_mean - baseline_mean) / baseline_std
+            if deviation > self.std_multiplier:
+                self.drifted_features.append(f)
             
-            feature_drift = len(self.drifted_features) > 0# True if atleast 1 drift detected
+        feature_drift = len(self.drifted_features) > 0# True if atleast 1 drift detected
 
-            #------------------------Drift Reason---------------------------------#
-            # --- Determine drift reason ---
-            if confidence_drift and feature_drift:
-                self.drift_detected = True
-                self.drift_reason = 'both'
-                print("DRIFT | confidence:", round(self.avg_confidence_score, 4), "| features:", self.drifted_features)
-            elif confidence_drift:
-                self.drift_detected = True
-                self.drift_reason = 'confidence_drop'
-                print("[DriftDetector] DRIFT (confidence) - avg:", round(self.avg_confidence_score, 4))
-            elif feature_drift:
-                self.drift_detected = True
-                self.drift_reason = 'feature_drift'
-                print("[DriftDetector] DRIFT (features) - drifted:", self.drifted_features)
+        #------------------------Drift Reason---------------------------------#
+        # --- Determine drift reason ---
+        if confidence_drift and feature_drift:
+            self.drift_detected = True
+            self.drift_reason = 'both'
+            print("DRIFT | confidence:", round(self.avg_confidence_score, 4), "| features:", self.drifted_features)
+        elif confidence_drift:
+            self.drift_detected = True
+            self.drift_reason = 'confidence_drop'
+            print("[DriftDetector] DRIFT (confidence) - avg:", round(self.avg_confidence_score, 4))
+        elif feature_drift:
+            self.drift_detected = True
+            self.drift_reason = 'feature_drift'
+            print("[DriftDetector] DRIFT (features) - drifted:", self.drifted_features)
 
             
-            # write status to Redis so FastAPI /ml-stats can read it
-            self.redis.set('drift_status', json.dumps({
-            'avg_confidence': round(self.avg_confidence_score, 4),     
-            'drift_detected': self.drift_detected,              
-            'drift_reason': self.drift_reason,                  
-            'drifted_features': self.drifted_features,          
-            'window_size': len(self.confidence_scores)          
+        # write status to Redis so FastAPI /ml-stats can read it
+        self.redis.set('drift_status', json.dumps({
+        'avg_confidence': round(self.avg_confidence_score, 4),     
+        'drift_detected': self.drift_detected,              
+        'drift_reason': self.drift_reason,                  
+        'drifted_features': self.drifted_features,          
+        'window_size': len(self.confidence_scores)          
         }))
             
     def get_status(self) -> dict:
@@ -148,20 +148,20 @@ class AutoRetrainer:
             #above line swaps model so new model comes in
             #so reset everything
             joblib.dump(new_model,self.model_path)
-            self.driftDetector.drift_detected=False
-            self.driftDetector.drift_reason=None
-            self.driftDetector.drifted_features = []             
-            self.driftDetector.avg_confidence_score = 1.0       
-            self.driftDetector.confidence_scores.clear() 
-            for f in self.driftDetector.feature_windows:        
-                self.driftDetector.feature_windows[f].clear()  
+            self.drift_detector.drift_detected=False
+            self.drift_detector.drift_reason=None
+            self.drift_detector.drifted_features = []             
+            self.drift_detector.avg_confidence_score = 1.0       
+            self.drift_detector.confidence_scores.clear() 
+            for f in self.drift_detector.feature_windows:        
+                self.drift_detector.feature_windows[f].clear()  
             print('[AutoRetrainer] Hot-swap complete-All drift state reset')
     
     def monitor_loop(self, X_data):
         # runs in background thread checks drift in every 60 seconds
         while True:
             time.sleep(60)
-            if self.driftDetector.drift_detected: 
+            if self.drift_detector.drift_detected: 
                 self.retrain_and_swap(X_data)
 
 
