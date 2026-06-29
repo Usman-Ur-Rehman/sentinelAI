@@ -18,8 +18,8 @@ print('Loading Models')
 models=loadModels()
 
 #for retraining loading data but retraining on drifting happens only on normal data
-X_Scaled=np.load('ML/X_scaled')
-y_binary=np.load('ML/y_binary')
+X_Scaled=np.load('ML/X_scaled.npy')
+y_binary=np.load('ML/y_binary.npy')
 
 X_normal_for_retraining=X_Scaled[y_binary==0]
 
