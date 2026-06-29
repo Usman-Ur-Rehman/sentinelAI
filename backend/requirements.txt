@@ -2,3 +2,4 @@ fastapi
 uvicorn
 clickhouse-driver
 python-dotenv
+redis

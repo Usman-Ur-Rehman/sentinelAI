@@ -51,11 +51,11 @@ while True:
                 try:
 
                     features=generator_event_to_features(event)
-                    result=scoreEvent(event,models)#returns dict containing scored details
+                    result=scoreEvent(features,models)#returns dict containing scored details
                     result['orignal_event']=event#add orignal event details(in orignal gen.py format)so that agent can block it
                     r.xadd('scored_stream',{'data':json.dumps(result)})#writing result into scored_stream that will go into agent
 
-                    driftDetector.addResult(
+                    drift_detector.addResult(
                         confidence=result['confidence_score'],#current event confidence score calculated during ensembling
                         raw_features=result['raw_features']#12 cicids features of current event
                     )

@@ -3,6 +3,7 @@ import torch
 import joblib
 from models import Autoencoder
 from feature_mapping import CICIDS_FEATURES
+import pandas as pd
 
 CONFIDENCE_THRESHOLD=0.85
 
@@ -49,8 +50,7 @@ def scoreEvent(event_features:list,models:tuple) -> dict:
     #now a feature comes and we have to find confidence score for it but before finding the score we scale all 12 features of  
     #that event using the same scaler we used earlier during preprocessing of data
 
-    features_scaled=scaler.transform([event_features])
-
+    features_scaled=scaler.transform(pd.DataFrame([event_features], columns=CICIDS_FEATURES))
     #----------------------Passing Event From IF And Detecting Score-----------------#
 
     #passing those scaled features through isolation forestmodel so it gives us thier score
